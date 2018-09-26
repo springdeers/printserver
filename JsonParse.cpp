@@ -5,328 +5,226 @@ JsonParse::JsonParse()
 {
 
 }
-/*
+
 // slot...HttpResultParseStore
-bool JsonParse::Json_Parse(QString str)
+bool JsonParse::Json_Parse(QString Json, score_info_st& score_info, QString& errmsg)
 {
     qDebug() << "Json_Parse begin...";
 
     bool success = false;
-    QString data1;
-
-    QString buf = str;
+//    QString errmsg;
+    errmsg = "Json_Parse no error";
+    QString buf = Json;
     QByteArray data = buf.toUtf8();
 
     QJsonParseError jsonError;//Qt5新类
     QJsonDocument json = QJsonDocument::fromJson(data, &jsonError);//Qt5新类
     if (jsonError.error == QJsonParseError::NoError)
     {
+
         if (json.isObject())
         {
             QJsonObject rootObj = json.object();
-            //是否含有key  rslt
-            if(rootObj.contains("rslt"))
+
+            //是否含有key  type
+            if(rootObj.contains("type"))
             {
-                QJsonValue value = rootObj.value("bdid");
+                QJsonValue value = rootObj.value("type");
                 //判断是否是string类型
-                if (value.isString())
-                {
-                    data1 = value.toString();
-                    if(data1=="ok")
-                    {
-
-                        if (rootObj.contains("data"))//是否包含指定的key
-                        {
-                            QJsonValue value = rootObj.value("data");//得到键值data所对应的数值
-
-                            if(value.isArray())
-                            {
-                                QJsonArray array = value.toArray();
-                                //int size = array.size();
-
-                                QJsonValue arrayVal = array.at(0);
-                                if(arrayVal.isNull())
-                                {
-                                    // arrayVal is null
-                                    ret = "arrayVal is null";
-                                }
-                                QJsonObject arrayobj = arrayVal.toObject();
-
-
-                                // AAAAAAAA    data parse  AAAAAAAA
-                                // arrayobj is our obj, it contains every point we need such as id and name etc.
-
-                                // data.id  --> taskid
-                                if(arrayobj.contains("id"))
-                                {
-                                    QJsonValue idVal = arrayobj.value("id");
-                                    if(idVal.isDouble())
-                                    {
-                                        data1 = QString::number(idVal.toVariant().toInt(),10);
-
-                                        ret = "id ok";
-                                    }
-                                    else
-                                    {
-                                        ret = "idVal is string";
-                                    }
-                                }
-                                else
-                                {
-                                    // id not contained
-                                    ret = "id not contained";
-                                }
-
-
-                                // data.name:"押运"  -> taskname
-                                if(arrayobj.contains("name"))
-                                {
-                                    QJsonValue val = arrayobj.value("name");
-                                    if(val.isString())
-                                    {
-//                                        m_ui_param->task_name = val.toString();
-                                        ret = "name ok";
-                                    }
-                                    else
-                                    {
-                                        ret = "name is not string";
-                                    }
-                                }
-                                else
-                                {
-                                    ret = "name not contained";
-                                }
-
-                                // "from1":"海一",
-                                if(arrayobj.contains("from1"))
-                                {
-                                    QJsonValue val = arrayobj.value("from1");
-                                    if(val.isString())
-                                    {
-                                        m_ui_param->from = val.toString();
-                                        ret = "from1 ok";
-                                    }
-                                    else
-                                    {
-                                        ret = "from1 is not string";
-                                    }
-                                }
-                                else
-                                {
-                                    ret = "from1 not contained";
-                                }
-
-
-
-                                //"to1":"空二",
-                                if(arrayobj.contains("to1"))
-                                {
-                                    QJsonValue val = arrayobj.value("to1");
-                                    if(val.isString())
-                                    {
-//                                        m_ui_param->to = val.toString();
-                                        ret = "to1 ok";
-                                    }
-                                    else
-                                    {
-                                        ret = "to1 is not string";
-                                    }
-                                }
-                                else
-                                {
-                                    ret = "to1 not contained";
-                                }
-
-                                //"timestart":"2018-06-03 24:11:11",
-                                if(arrayobj.contains("timestart"))
-                                {
-                                    QJsonValue val = arrayobj.value("timestart");
-                                    if(val.isString())
-                                    {
-//                                        m_ui_param->task_acquire_time = val.toString();
-                                        ret = "timestart ok";
-                                    }
-                                    else
-                                    {
-                                        ret = "timestart is not string";
-                                    }
-                                }
-                                else
-                                {
-                                    ret = "timestart not contained";
-                                }
-
-                                //"timeend":"2018-06-05 24:11:11",
-                                if(arrayobj.contains("timeend"))
-                                {
-                                    QJsonValue val = arrayobj.value("timeend");
-                                    if(val.isString())
-                                    {
-//                                        m_ui_param->task_plan_finish_time = val.toString();
-                                        ret = "timeend ok";
-                                    }
-                                    else
-                                    {
-                                        ret = "timeend is not string";
-                                    }
-                                }
-                                else
-                                {
-                                    ret = "timeend not contained";
-                                }
-
-
-
-                                //"maxmisstime":"24"
-                                if(arrayobj.contains("maxmisstime"))
-                                {
-                                    QJsonValue val = arrayobj.value("maxmisstime");
-                                    if(val.isString())
-                                    {
-//                                        m_ui_param->task_allow_offset_time = val.toString();
-                                        ret = "maxmisstime ok";
-                                    }
-                                    else
-                                    {
-                                        ret = "maxmisstime is not string";
-                                    }
-                                }
-                                else
-                                {
-                                    ret = "maxmisstime not contained";
-                                }
-
-
-                                if(arrayobj.contains("executor_code"))
-                                {
-                                    QJsonValue val = arrayobj.value("executor_code");
-                                    if(val.isString())
-                                    {
-//                                        /m_ui_param->executor_code = val.toString();
-                                        ret = "executor_code ok";
-                                    }
-                                    else
-                                    {
-                                        ret = "executor_code is not string";
-                                    }
-                                }
-                                else
-                                {
-                                    ret = "executor_code not contained";
-                                }
-
-                                // data."reportfreq":10
-                                if(arrayobj.contains("reportfreq"))
-                                {
-                                    QJsonValue val = arrayobj.value("reportfreq");
-                                    if(val.isDouble())
-                                    {
-                                        // QString::number(val.toVariant().toInt(),10);
-                                        int temp = (val.toInt());
-                                        if(temp <=0)  temp = 10;
-//                                        m_ui_param->reportfreq = temp*1000;
-                                        ret = "reportfreq ok";
-                                        ret = "ok";
-                                    }
-                                    else
-                                    {
-                                        ret = "reportfreq is not double";
-                                    }
-                                }
-                                else
-                                {
-                                    ret = "reportfreq not contained";
-                                }
-
-
-                                // "executeor" 数组
-                                if(arrayobj.contains("executeor"))
-                                {
-                                    QJsonValue val = arrayobj.value("executeor");
-                                    if(val.isArray())
-                                    {
-                                        QJsonArray array = val.toArray();
-                                        int size = array.size();
-                                        for(int i=0; i<size; i++)
-                                        {
-                                            QJsonValue arrayVal = array.at(i);
-                                            if(arrayVal.isNull)
-                                            {
-                                                ret = "arrayVal is NULL";
-                                            }
-                                            QJsonObject executeor_obj = arrayVal.toObject();
-                                            if(executeor_obj.contains("code"))
-                                            {
-                                                QJsonValue codeVal = executeor_obj.value("code");
-                                                if(codeVal.isString())
-                                                {
-                                                    //保存执行人代号
-                                                    // executeor_List[size] = codeVal.toString();
-                                                    ret = "ok";
-                                                }
-                                                else
-                                                {
-                                                    ret = "codeVal is not string";
-                                                }
-                                            }
-                                            else
-                                            {
-                                                ret = "executeor code not contained";
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        ret = "executeor is not array";
-                                    }
-                                }
-                                else
-                                {
-                                    ret = "executeor not contained";
-                                }
-                            }
-                            else
-                            {
-                                ret = "data is not array";
-                            }
-                        }
-                        else
-                        {
-                            ret = "data is not string";
-                        }
-                    }
-                    else
-                    {
-                        // rslt error
-                        ret = "rslt error";
-                    }
+                if (value.isString()){
+                    score_info.type = value.toString();
+                }else{
+                    errmsg = "type is not string!";
                 }
-                else
-                {
-                    // rslt is not string
-                    ret = "rslt is not string";
-                }
+            }else{
+                errmsg = "type is not contains";
             }
-            else
+
+            //是否含有key  code
+            if(rootObj.contains("code"))
             {
-                ret = "rslt is not contained";
+                QJsonValue value = rootObj.value("code");
+                //判断是否是string类型
+                if (value.isString()){
+                    score_info.code = value.toString();
+                }else{
+                    errmsg = "code is not string!";
+                }
+            }else{
+                errmsg = "code is not contained!";
             }
+
+            //是否含有key  cardid
+            if(rootObj.contains("cardid"))
+            {
+                QJsonValue value = rootObj.value("cardid");
+                //判断是否是string类型
+                if (value.isString()){
+                    score_info.cardid = value.toString();
+                }else{
+                    errmsg = "cardid is not string!";
+                }
+            }else{
+                errmsg = "cardid is not contained!";
+            }
+
+            //是否含有key  comid
+            if(rootObj.contains("comid"))
+            {
+                QJsonValue value = rootObj.value("comid");
+                //判断是否是string类型
+                if (value.isString()){
+                    score_info.comid = value.toString();
+                }else{
+                    errmsg = "comid is not string!";
+                }
+            }else{
+                errmsg = "comid is not contained!";
+            }
+
+
+
+            //是否含有key  name
+            if(rootObj.contains("name"))
+            {
+                QJsonValue value = rootObj.value("name");
+                //判断是否是string类型
+                if (value.isString()){
+                    score_info.name = value.toString();
+                }else{
+                    errmsg = "name is not string!";
+                }
+            }else{
+                errmsg = "name is not contained!";
+            }
+
+            //是否含有key  finalscore
+            if(rootObj.contains("finalscore"))
+            {
+                QJsonValue value = rootObj.value("finalscore");
+                //判断是否是string类型
+                if (value.isString()){
+                    score_info.finalscore = value.toString();
+                }else{
+                    errmsg = "finalscore is not string!";
+                }
+            }else{
+                errmsg = "finalscore is not contained!";
+            }
+
+            //是否含有key  credit_point
+            if(rootObj.contains("credit_point"))
+            {
+                QJsonValue value = rootObj.value("credit_point");
+                //判断是否是string类型
+                if (value.isString()){
+                    score_info.credit_point = value.toString();
+                }else{
+                    errmsg = "credit_point is not string!";
+                }
+            }else{
+                errmsg = "credit_point is not contained!";
+            }
+
+            //是否含有key  grade_point
+            if(rootObj.contains("grade_point"))
+            {
+                QJsonValue value = rootObj.value("grade_point");
+                //判断是否是string类型
+                if (value.isString()){
+                    score_info.grade_point = value.toString();
+                }else{
+                    errmsg = "grade_point is not string!";
+                }
+            }else{
+                errmsg = "grade_point is not contained!";
+            }
+
+            //是否含有key  class
+            if(rootObj.contains("class"))
+            {
+                QJsonValue value = rootObj.value("class");
+                //判断是否是string类型
+                if (value.isString()){
+                    score_info.score_class = value.toString();
+                }else{
+                    errmsg = "class is not string!";
+                }
+            }else{
+                errmsg = "class is not contained!";
+            }
+
+            //是否含有key  suggestion
+            if(rootObj.contains("suggestion"))
+            {
+                QJsonValue value = rootObj.value("suggestion");
+                //判断是否是string类型
+                if (value.isString()){
+                    score_info.suggestion = value.toString();
+                }else{
+                    errmsg = "suggestion is not string!";
+                }
+            }else{
+                errmsg = "suggestion is not contained!";
+            }
+
+
+            //是否含有key  remains
+            if(rootObj.contains("remains"))
+            {
+                QJsonValue value = rootObj.value("remains");
+                //判断是否是string类型
+                if(value.isArray())
+                {
+                    QJsonArray array = value.toArray();
+                    int size = array.size();
+                    score_info.remain_list.clear();
+                    for(int i=0; i<size; i++)
+                    {
+                        QJsonValue arrayVal = array.at(i);
+                        if(arrayVal.isNull())
+                        {
+                            errmsg = "arrayVal is not null!";
+                        }
+                        if(arrayVal.isObject())
+                        {
+                            QJsonObject arrayObj = arrayVal.toObject();
+                            if(arrayObj.contains("name"))
+                            {
+                                QJsonValue remainsVal = arrayObj.value("name");
+                                if(remainsVal.isString())
+                                {
+                                    score_info.remain_list.append(remainsVal.toString());
+                                    success = true;
+                                }else{
+                                     errmsg = "remainsVal is not string";
+                                }
+                            }else{
+                                errmsg = "remainsObj name not contains!";
+                            }
+                        }else{
+                            errmsg = "arrayVal is not object";
+                        }
+                    }
+
+                }else{
+                    errmsg = "remains is not array";
+                }
+
+            }else{
+                errmsg = "remains is not contained!";
+            }
+
+        }else{
+            errmsg = "json is not object";
         }
-        else
-        {
-            // json is not object
-            ret = "json is not object";
-        }
-    }
-    else
-    {
-        // json format error
-        ret = "json format error";
+
+    }else{
+        errmsg = "json is error!";
     }
 
-    qDebug() << ret;
-    qDebug() << "HttpResultParseStore end...";
-    return ret;
+    qDebug() << errmsg;
+    qDebug() << "Json_parse end...";
+    return success;
 }
 
-*/

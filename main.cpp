@@ -1,21 +1,10 @@
 #include <QCoreApplication>
 #include <QString>
+#include <QDebug>
+#include "JsonParse.h"
 
-typedef struct
-{
-    QString trpe;
-    QString code;
-    QString cardid;
-    QString comid;
-    QString name;
-    QString finalscore;
-    QString credit_point;
-    QString grade_point;
-    QString score_class;
-    QString suggestion;
-    QStringList remain_list;
 
-}score_info_st, *score_info_t;
+
 
 int main(int argc, char *argv[])
 {
@@ -46,6 +35,36 @@ int main(int argc, char *argv[])
                                   "{\"name\":\"VR电梯\"},"
                                   "{\"name\":\"VR地震\"},"
                                   "{\"name\":\"VR驾驶\"}]}";
+
+
+
+    score_info_st score_info;
+    QString errmsg;
+    JsonParse jsonparse;
+    if( jsonparse.Json_Parse(str,score_info,errmsg))
+    {
+        qDebug() << "score_info.name" <<score_info.name;
+        qDebug() << "score_info.type" <<score_info.type;
+        qDebug() << "score_info.code" <<score_info.code;
+        qDebug() << "score_info.cardid" << score_info.cardid;
+        qDebug() << "score_info.comid" << score_info.comid;
+        qDebug() << "score_info.credit_point" << score_info.credit_point;
+        qDebug() << "score_info.score_class" << score_info.score_class;
+        qDebug() << "score_info.finalscore"<<score_info.finalscore;
+        qDebug() << "score_info.suggestion"<<score_info.suggestion;
+        qDebug() << "score_info.class"<<score_info.score_class;
+//        qDebug() << "score_info.remain"<<score_info.remain_list;
+        int size = score_info.remain_list.size();
+        for(int i=0; i<size; i++)
+        {
+            qDebug() << score_info.remain_list.at(i);
+        }
+    }
+    else
+    {
+        qDebug() << "json parse error!";
+    }
+
 
 
 
