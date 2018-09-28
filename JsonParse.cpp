@@ -12,11 +12,29 @@ bool JsonParse::Json_Parse(QString Json, score_info_st& score_info, QString& err
     qDebug() << "Json_Parse begin...";
 
     bool success = false;
-//    QString errmsg;
     errmsg = "Json_Parse no error";
-    QString buf = Json;
-    QByteArray data = buf.toUtf8();
 
+    int data_top,data_bottom;
+    QString framehead= "$";
+    QString frametail= "*";
+
+    data_top=Json.indexOf(framehead,0);
+    data_bottom=Json.indexOf(frametail,0);
+    qDebug() << data_top << data_bottom;
+
+    QString rec_data=Json.mid((data_top),(data_bottom));//去掉"*AA\r\n"字段
+    qDebug() << "receive  data: " << rec_data;
+    printf("----------------------");
+
+
+    int len = rec_data.indexOf("{");
+    qDebug() << "len = :" << len;
+    QString buf=rec_data.right(rec_data.length()-len);
+
+    qDebug()<<"buf :"<< buf;
+
+
+    QByteArray data = buf.toUtf8();
     QJsonParseError jsonError;//Qt5新类
     QJsonDocument json = QJsonDocument::fromJson(data, &jsonError);//Qt5新类
     if (jsonError.error == QJsonParseError::NoError)
@@ -169,51 +187,69 @@ bool JsonParse::Json_Parse(QString Json, score_info_st& score_info, QString& err
             }
 
 
-            //是否含有key  remains
-            if(rootObj.contains("remains"))
+
+            if(rootObj.contains("remainsobj"))
             {
-                QJsonValue value = rootObj.value("remains");
-                //判断是否是string类型
-                if(value.isArray())
+                QJsonValue value = rootObj.value("remainsobj");
+                if(value.isObject())
                 {
-                    QJsonArray array = value.toArray();
-                    int size = array.size();
-                    score_info.remain_list.clear();
-                    for(int i=0; i<size; i++)
+                    QJsonObject obj = value.toObject();
+
+                    //是否含有key  remains
+                    if(obj.contains("remains"))
                     {
-                        QJsonValue arrayVal = array.at(i);
-                        if(arrayVal.isNull())
+                        QJsonValue value = obj.value("remains");
+                        //判断是否是string类型
+                        if(value.isArray())
                         {
-                            errmsg = "arrayVal is not null!";
-                        }
-                        if(arrayVal.isObject())
-                        {
-                            QJsonObject arrayObj = arrayVal.toObject();
-                            if(arrayObj.contains("name"))
+                            QJsonArray array = value.toArray();
+                            int size = array.size();
+                            score_info.remain_list.clear();
+                            for(int i=0; i<size; i++)
                             {
-                                QJsonValue remainsVal = arrayObj.value("name");
-                                if(remainsVal.isString())
+                                QJsonValue arrayVal = array.at(i);
+                                if(arrayVal.isNull())
                                 {
-                                    score_info.remain_list.append(remainsVal.toString());
-                                    success = true;
-                                }else{
-                                     errmsg = "remainsVal is not string";
+                                    errmsg = "arrayVal is not null!";
                                 }
-                            }else{
-                                errmsg = "remainsObj name not contains!";
+                                if(arrayVal.isObject())
+                                {
+                                    QJsonObject arrayObj = arrayVal.toObject();
+                                    if(arrayObj.contains("name"))
+                                    {
+                                        QJsonValue remainsVal = arrayObj.value("name");
+                                        if(remainsVal.isString())
+                                        {
+                                            score_info.remain_list.append(remainsVal.toString());
+                                            success = true;
+                                        }else{
+                                             errmsg = "remainsVal is not string";
+                                        }
+                                    }else{
+                                        errmsg = "remainsObj name not contains!";
+                                    }
+                                }else{
+                                    errmsg = "arrayVal is not object";
+                                }
                             }
+
                         }else{
-                            errmsg = "arrayVal is not object";
+                            errmsg = "remains is not array";
                         }
+
+                    }else{
+                        errmsg = "remains is not contained!";
                     }
 
                 }else{
-                    errmsg = "remains is not array";
+                    errmsg = "remainsobj is not object";
                 }
-
             }else{
-                errmsg = "remains is not contained!";
+                errmsg = "remainsobj is not contained";
             }
+
+
+
 
         }else{
             errmsg = "json is not object";
