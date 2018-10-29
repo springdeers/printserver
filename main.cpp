@@ -1,4 +1,4 @@
-#include <QCoreApplication>
+#include <QApplication>
 #include <QString>
 #include <QDebug>
 #include "JsonParse.h"
@@ -13,7 +13,7 @@
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication a(argc, argv);
+    QApplication a(argc, argv);
 
     MyServer mServer;
     mServer.runServer(QHostAddress::Any, 7126);

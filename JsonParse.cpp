@@ -20,7 +20,6 @@ bool JsonParse::Json_Parse(QString Json, score_info_st& score_info, QString& err
 
     data_top=Json.indexOf(framehead,0);
     data_bottom=Json.indexOf(frametail,0);
-    qDebug() << data_top << data_bottom;
 
     QString rec_data=Json.mid((data_top),(data_bottom));//去掉"*AA\r\n"字段
     qDebug() << "receive  data: " << rec_data;
@@ -28,10 +27,7 @@ bool JsonParse::Json_Parse(QString Json, score_info_st& score_info, QString& err
 
 
     int len = rec_data.indexOf("{");
-    qDebug() << "len = :" << len;
     QString buf=rec_data.right(rec_data.length()-len);
-
-    qDebug()<<"buf :"<< buf;
 
 
     QByteArray data = buf.toUtf8();

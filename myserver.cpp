@@ -1,7 +1,8 @@
 #include "myserver.h"
+#include <QPalette>
+#include <QColor>
 
-MyServer::MyServer(QObject *parent) :
-    QObject(parent)
+MyServer::MyServer(QObject *parent) : QObject(parent)
 {
     server = new QTcpServer(this);
     connect(server,SIGNAL(newConnection()),this,SLOT(newConnection()));
@@ -42,7 +43,6 @@ void MyServer::runServer(QHostAddress address, int port)
         qDebug() << "Server started";
     }
 }
-
 
 void MyServer::ReceiveDataProcess()
 {
@@ -100,111 +100,37 @@ void MyServer::PrintDataProcess(MyClient* clientSocket, QString recvstr)
     if(success)
     {
         paiban(score_info);
+        qDebug() << "******************************";
+        qDebug() << score_info.score_class;
+        qDebug() << score_info.suggestion;
+        qDebug() << "******************************";
     }
 
-    sendstr = PrintAck_cmd_send();
+    sendstr = PrintAck_cmd_send(score_info);
     clientSocket->sendMsg(sendstr);
 }
 
-
-
-QString MyServer::InitAck_cmd_send()
-{
-    QJsonObject obj;
-
-    obj.insert("role", "printsvr");
-    obj.insert("rslt", "ok");
-    obj.insert("error", "");
-    obj.insert("seqno", "231");
-
-//qDebug() << obj;
-    //json to qstring lei xing
-    QJsonDocument document;
-    document.setObject(obj);
-    QString json(document.toJson(QJsonDocument::Compact));
-    json="$initack,printsvr,backcard,"+json;
-
-    QString check_data = make_checkSum(json);//计算校验核
-    json=json+check_data;
-    QByteArray json_out = json.toUtf8();
-
-//    qDebug() << json_out;
-    return json_out;
-}
-
-QString MyServer::pong_cmd_send()
-{
-    QJsonObject obj;
-
-    obj.insert("from", "printsvr");
-    obj.insert("to", "backcard");
-
-    QJsonDocument document;
-    document.setObject(obj);
-    QString json(document.toJson(QJsonDocument::Compact));
-    json="$pong,"+json;
-
-    QString check_data = make_checkSum(json);//计算校验核
-    json=json+check_data;
-    QByteArray json_out = json.toUtf8();
-
-    return json_out;
-}
-
-QString MyServer::AuthAck_cmd_send()
-{
-    QJsonObject obj;
-
-    obj.insert("rslt", "ok");
-    obj.insert("error", "");
-    obj.insert("seqno", "231");
-
-    QJsonDocument document;
-    document.setObject(obj);
-    QString json(document.toJson(QJsonDocument::Compact));
-    json="$authack,printsvr,backcard,"+json;
-
-    QString check_data = make_checkSum(json);//计算校验核
-    json=json+check_data;
-    QByteArray json_out = json.toUtf8();
-
-    return json_out;
-}
-
-QString MyServer::PrintAck_cmd_send()
-{
-    QJsonObject obj;
-
-    obj.insert("cardid", "304068");
-    obj.insert("comid", "101");
-    obj.insert("name", "李明");
-    obj.insert("rslt", "ok");
-    obj.insert("error", "");
-    obj.insert("seqno", "231");
-
-    QJsonDocument document;
-    document.setObject(obj);
-    QString json(document.toJson(QJsonDocument::Compact));
-    json="$printack,printsvr,backcard,"+json;
-
-    QString check_data = make_checkSum(json);//计算校验核
-    json=json+check_data;
-    QByteArray json_out = json.toUtf8();
-
-    return json_out;
-}
-
-
-
-
 void MyServer::paiban(score_info_st score_info)
 {
+    QFont font_title(QFont("隶书", 30));
+    QFont font_name(QFont("隶书", 20));
+    QFont font_grade(QFont("隶书", 20));
+    QFont font_items(QFont("楷体", 12));
+    QFont font_addition(QFont("隶书", 20));
+    QFont font_encourage(QFont("隶书", 20));
 
     //生成固定内容
+//    QString current_date =QDateTime::currentDateTime().toString("yyyy年MM月dd日");
+//    QString p_name =  QString("%1同学，恭喜您于%2完成了公共安全体验，成绩如下：").arg(score_info.name).arg(current_date);
+////    QString p_score = QString("学分点：%1分   绩点： %2分  总分：%3分").arg(score_info.credit_point).arg(score_info.grade_point).arg(score_info.finalscore);
+//    QString p_score = QString("总分：%1分").arg(score_info.finalscore);
+//    QString p_items = QString("您此次未参与学习体验的项目有：");
+
     QString current_date =QDateTime::currentDateTime().toString("yyyy年MM月dd日");
-    QString p_name =  QString("%1同学，恭喜您于%2完成了公共安全体验，成绩如下：").arg(score_info.name).arg(current_date);
-    QString p_score = QString("学分点：%1分   绩点： %2分  总分：%3分").arg(score_info.credit_point).arg(score_info.grade_point).arg(score_info.finalscore);
-    QString p_items = QString("您此次未参与学习体验的项目有：");
+    QString p_name =  QString("%1同学：").arg(score_info.name);
+    QString p_score = QString("    恭喜您于%1完成了公共安全体验，总分：%2分,成绩%3，%4").arg(current_date).arg(score_info.finalscore).arg(score_info.score_class).arg(score_info.suggestion);
+    QString p_items = QString("    您此次未体验的项目有：");
+
     for(int i=0; i<score_info.remain_list.count()-1; i++)
     {
         p_items.append(score_info.remain_list.at(i));
@@ -225,16 +151,20 @@ void MyServer::paiban(score_info_st score_info)
     root_frame_format.setMargin(250);
     root_frame->setFrameFormat(root_frame_format); //给框架使用格式
 
+    QTextBlockFormat textBlockFormat;
+    textBlockFormat.setTopMargin(15);//设置段前行距：15
+    textBlockFormat.setBottomMargin(15);//设置段后行距：15
+    textBlockFormat.setLeftMargin(20);//设置段左行距：20
+    textBlockFormat.setRightMargin(20);//设置段右行距：20
+    textBlockFormat.setLineHeight(100,QTextBlockFormat::ProportionalHeight);//设置行间距，单倍行距
+
     // 显示标题段落
     {
         // 字体格式
         QTextCharFormat char_format;
-        char_format.setFont(QFont("华文行楷", 30));
+        char_format.setFont(font_title);
         //段落格式
-        QTextBlockFormat textBlockFormat;
-        textBlockFormat.setTopMargin(20);//设置段前行距：20
-        textBlockFormat.setBottomMargin(20);//设置段后行距：20
-        textBlockFormat.setLineHeight(100,QTextBlockFormat::ProportionalHeight);//设置行间距，单倍行距
+
         textBlockFormat.setAlignment(Qt::AlignHCenter);//对其方式：居中对其
         cursor.setBlockFormat(textBlockFormat);
         // 插入内容
@@ -246,70 +176,55 @@ void MyServer::paiban(score_info_st score_info)
         cursor.insertBlock();
         // 字体格式
         QTextCharFormat char_format;
-        char_format.setFont(QFont("宋体", 20));
+        char_format.setFont(font_name);
         // 段落格式
-        QTextBlockFormat textBlockFormat;
-        textBlockFormat.setTopMargin(20);//设置段前行距：20
-        textBlockFormat.setBottomMargin(20);//设置段后行距：20
-        textBlockFormat.setLineHeight(100,QTextBlockFormat::ProportionalHeight);//设置行间距，单倍行距
-        textBlockFormat.setAlignment(Qt::AlignLeft);//对其方式：左对齐
+        textBlockFormat.setAlignment(Qt::AlignLeft);//对其方式：两端对齐
         cursor.setBlockFormat(textBlockFormat);
         // 插入内容
         cursor.insertText(p_name,char_format);
     }
-
 
     // 显示成绩段落
     {
         cursor.insertBlock();
         // 字体格式
         QTextCharFormat char_format;
-        char_format.setFont(QFont("宋体", 24));
+        char_format.setFont(font_grade);
         // 段落格式
-        QTextBlockFormat textBlockFormat;
-        textBlockFormat.setTopMargin(20);//设置段前行距：20
-        textBlockFormat.setBottomMargin(20);//设置段后行距：20
-        textBlockFormat.setLineHeight(100,QTextBlockFormat::ProportionalHeight);//设置行间距，单倍行距
-        textBlockFormat.setAlignment(Qt::AlignHCenter);//对其方式：居中对齐
+        textBlockFormat.setAlignment(Qt::AlignLeft);//对其方式：居中对齐
         cursor.setBlockFormat(textBlockFormat);
         // 插入内容
         cursor.insertText(p_score,char_format);
     }
-
 
     // 显示未体验项目段落
     {
         cursor.insertBlock();
         // 字体格式
         QTextCharFormat char_format;
-        char_format.setFont(QFont("黑体", 16));
+        char_format.setFont(font_items);
+
         // 段落格式
-        QTextBlockFormat textBlockFormat;
-        textBlockFormat.setTopMargin(20);//设置段前行距：20
-        textBlockFormat.setBottomMargin(20);//设置段后行距：20
-        textBlockFormat.setLineHeight(100,QTextBlockFormat::ProportionalHeight);//设置行间距，单倍行距
-        textBlockFormat.setAlignment(Qt::AlignLeft);//对其方式：左对齐
+        textBlockFormat.setAlignment(Qt::AlignJustify);//对其方式：两端对齐
         cursor.setBlockFormat(textBlockFormat);
         // 插入内容
         cursor.insertText(p_items,char_format);
     }
 
-
     // 若成绩大于90分，则显示附加段落段落
     {
        int score = score_info.finalscore.toDouble();
-       if(score >= 90)
+       if(score >= 70)
        {
            cursor.insertBlock();
            // 字体格式
            QTextCharFormat char_format;
-           char_format.setFont(QFont("宋体", 20));
+           char_format.setFont(font_addition);
+           QColor color("red");
+           char_format.setForeground(color);
+
            // 段落格式
-           QTextBlockFormat textBlockFormat;
-           textBlockFormat.setTopMargin(20);//设置段前行距：20
-           textBlockFormat.setBottomMargin(20);//设置段后行距：20
-           textBlockFormat.setLineHeight(100,QTextBlockFormat::ProportionalHeight);//设置行间距，单倍行距
-           textBlockFormat.setAlignment(Qt::AlignLeft);//对其方式：左对齐
+           textBlockFormat.setAlignment(Qt::AlignRight);//对其方式：右对齐
            cursor.setBlockFormat(textBlockFormat);
            // 插入内容
            cursor.insertText(p_addition,char_format);
@@ -321,23 +236,18 @@ void MyServer::paiban(score_info_st score_info)
         cursor.insertBlock();
         // 字体格式
         QTextCharFormat char_format;
-        char_format.setFont(QFont("华文行楷", 20));
+        char_format.setFont(font_encourage);
         // 段落格式
-        QTextBlockFormat textBlockFormat;
-        textBlockFormat.setTopMargin(20);//设置段前行距：20
-        textBlockFormat.setBottomMargin(20);//设置段后行距：20
-        textBlockFormat.setLineHeight(100,QTextBlockFormat::ProportionalHeight);//设置行间距，单倍行距
         textBlockFormat.setAlignment(Qt::AlignRight);//对其方式：右对齐
         cursor.setBlockFormat(textBlockFormat);
         // 插入内容
         cursor.insertText(p_encourage,char_format);
     }
 
-    // 打印
 
+    // 打印
     QPrinterInfo printer_info_array[4];
     QList<QPrinterInfo> printer_info_list = QPrinterInfo::availablePrinters();
-//    qDebug() << printer_list;
 
 
     int printer_info_list_size = printer_info_list.size();
@@ -382,6 +292,9 @@ void MyServer::paiban(score_info_st score_info)
     }
 }
 
+
+
+
 void MyServer::do_the_print(QPrinterInfo info, QTextEdit *edit, QString name)
 {
     QPrinter p(info);
@@ -392,11 +305,93 @@ void MyServer::do_the_print(QPrinterInfo info, QTextEdit *edit, QString name)
 
     QString current_date =QDateTime::currentDateTime().toString("yyyyMMddhhmmss");
     QString path = QString("E:\\ScorePrint\\%1 - %2.pdf").arg(current_date).arg(name);
-//    p.setOutputFileName(path);
+    p.setOutputFileName(path);
     td->print(&p);
 }
 
 
+QString MyServer::InitAck_cmd_send()
+{
+    QJsonObject obj;
+
+    obj.insert("role", "printsvr");
+    obj.insert("rslt", "ok");
+    obj.insert("error", "");
+    obj.insert("seqno", getseqno());
+
+    QJsonDocument document;
+    document.setObject(obj);
+    QString json(document.toJson(QJsonDocument::Compact));
+    json="$initack,printsvr,backcard,"+json;
+
+    QString check_data = make_checkSum(json);//计算校验核
+    json=json+check_data;
+    QByteArray json_out = json.toUtf8();
+
+    return json_out;
+}
+
+QString MyServer::pong_cmd_send()
+{
+    QJsonObject obj;
+
+    obj.insert("from", "printsvr");
+    obj.insert("to", "backcard");
+
+    QJsonDocument document;
+    document.setObject(obj);
+    QString json(document.toJson(QJsonDocument::Compact));
+    json="$pong,"+json;
+
+    QString check_data = make_checkSum(json);//计算校验核
+    json=json+check_data;
+    QByteArray json_out = json.toUtf8();
+
+    return json_out;
+}
+
+QString MyServer::AuthAck_cmd_send()
+{
+    QJsonObject obj;
+
+    obj.insert("rslt", "ok");
+    obj.insert("error", "");
+    obj.insert("seqno", getseqno());
+
+    QJsonDocument document;
+    document.setObject(obj);
+    QString json(document.toJson(QJsonDocument::Compact));
+    json="$authack,printsvr,backcard,"+json;
+
+    QString check_data = make_checkSum(json);//计算校验核
+    json=json+check_data;
+    QByteArray json_out = json.toUtf8();
+
+    return json_out;
+}
+
+QString MyServer::PrintAck_cmd_send(score_info_st score_info)
+{
+    QJsonObject obj;
+
+    obj.insert("cardid", score_info.cardid);
+    obj.insert("comid", score_info.comid);
+    obj.insert("name", score_info.name);
+    obj.insert("rslt", "ok");
+    obj.insert("error", "");
+    obj.insert("seqno", getseqno());
+
+    QJsonDocument document;
+    document.setObject(obj);
+    QString json(document.toJson(QJsonDocument::Compact));
+    json="$printack,printsvr,backcard,"+json;
+
+    QString check_data = make_checkSum(json);//计算校验核
+    json=json+check_data;
+    QByteArray json_out = json.toUtf8();
+
+    return json_out;
+}
 
 QString MyServer::make_checkSum(QString & str)
 {
@@ -455,3 +450,14 @@ unsigned char MyServer::LongHToAscii(unsigned char* SrcBuff,unsigned char* DataB
    return 1;
 }
 
+int MyServer::getseqno()
+{
+    if(this->seqno>=65535)
+    {
+        this->seqno = 1;
+    }else
+    {
+        this->seqno++;
+    }
+    return this->seqno;
+}
